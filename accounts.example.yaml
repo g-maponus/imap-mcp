@@ -1,0 +1,40 @@
+# imap-mcp accounts — copy to ~/.config/imap-mcp/accounts.yaml and fill in.
+# This file is NOT secret: passwords live in separate files under IMAP_MCP_SECRETS
+# (default ~/.config/imap-mcp/secrets/), created with ./set-secret.sh <name>.
+# Add an account = add a block here + its secret file, then restart the server.
+
+accounts:
+  icloud:                                   # the key Claude uses to pick the account
+    description: Personal iCloud mailbox.
+    address: you@icloud.com                 # your main iCloud Mail address
+    display_name: Your Name                 # used in the From: of drafts
+    username: you@icloud.com                # iCloud: your Apple Account email (or the @icloud.com address)
+    password_file: icloud-app-password      # app-specific password, NOT your Apple Account password
+    organize: true                          # allow move/flag/create/rename/delete-EMPTY-folder tools
+    bulk_chunk: 25                          # iCloud has no IMAP MOVE; bigger COPY batches time out and
+    bulk_pause: 1.0                         #   iCloud then throttles the account ("Server Busy") for minutes
+    imap: {host: imap.mail.me.com, port: 993}
+    smtp: {host: smtp.mail.me.com, port: 465}   # only used if IMAP_MCP_ENABLE_SEND=true
+    send_as:                                # addresses drafts may be "From"; first is the default
+      - you@icloud.com
+      # - you@me.com
+      # - alias@icloud.com
+    # iCloud only flags Sent + Trash as special folders; tell the server about the others:
+    folders: {drafts: Drafts, junk: Junk, archive: Archive}
+
+  # Any other IMAP mailbox works the same way, e.g.:
+  # work:
+  #   address: you@example.com
+  #   username: you@example.com
+  #   password_file: work-imap
+  #   imap: {host: imap.example.com, port: 993}
+  #   smtp: {host: smtp.example.com, port: 465}
+  #   bulk_chunk: 200                       # servers WITH IMAP MOVE can take bigger batches
+
+# Read-only calendars (list_calendars / list_events / get_event). Keys match accounts above.
+# The CalDAV client can only read (PROPFIND/REPORT) — it can never create, change or delete events.
+calendars:
+  icloud:
+    url: https://caldav.icloud.com/
+    username: you@icloud.com
+    password_file: icloud-app-password      # the same app-specific password works for CalDAV
