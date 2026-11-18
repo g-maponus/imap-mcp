@@ -547,6 +547,28 @@ EXT_TYPES = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jp
              ".docx": DOCX, ".xlsx": XLSX, ".xlsm": XLSX, ".pptx": PPTX,
              ".txt": "text/plain", ".csv": "text/csv", ".ics": "text/calendar", ".json": "application/json"}
 XLSX_MAX_ROWS = 2000                 # per sheet
+# Labels senders use for "unknown binary" (S3-backed senders often use binary/octet-stream).
+GENERIC_TYPES = {"application/octet-stream", "binary/octet-stream", "application/x-octet-stream",
+                 "application/unknown", "application/download", "application/x-download",
+                 "application/force-download", "application/zip", "application/x-zip-compressed"}
+
+
+def _sniff(raw: bytes) -> str | None:
+    """Real type from the file's first bytes (PDF/images); None = unknown, fall back to extension."""
+    h = raw[:16]
+    if h.startswith(b"%PDF-"):
+        return "application/pdf"
+    if h.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if h.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if h[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if h[:4] == b"RIFF" and h[8:12] == b"WEBP":
+        return "image/webp"
+    if h[4:8] == b"ftyp" and h[8:12] in (b"heic", b"heix", b"hevc", b"heim", b"heis", b"mif1", b"msf1"):
+        return "image/heic"
+    return None
 
 
 def _docx_text(raw: bytes) -> str:
@@ -675,10 +697,10 @@ def get_attachment(
     name = p.get_filename() or f"attachment-{index}"
     ext = os.path.splitext(name.lower())[1]
     ctype = p.get_content_type()
-    if ctype in ("application/octet-stream", "application/zip", "application/x-zip-compressed") \
-            or (ext in EXT_TYPES and ctype.startswith("application/vnd.ms-")):   # untyped / mistyped
-        ctype = EXT_TYPES.get(ext, ctype)
     raw = p.get_payload(decode=True) or b""
+    if ctype in GENERIC_TYPES or ctype.endswith("octet-stream") \
+            or (ext in EXT_TYPES and ctype.startswith("application/vnd.ms-")):   # untyped / mistyped
+        ctype = _sniff(raw) or EXT_TYPES.get(ext, ctype)
     meta = {"filename": name, "content_type": ctype, "size": len(raw)}
 
     if ctype.startswith(TEXTUAL):
