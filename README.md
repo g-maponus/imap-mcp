@@ -24,7 +24,7 @@ claude.ai / Claude apps ──HTTPS──▶ Tailscale Funnel ──▶ imap-mcp
 | `list_accounts`, `list_folders` | Mailboxes and folders with unread counts | always |
 | `search_messages` | Search a folder by sender, recipient, subject, full text, dates, unread or flagged | always |
 | `read_message`, `get_thread` | Read a message without marking it read, or a whole conversation | always |
-| `get_attachment` | Open an attachment: **PDFs** as text (scanned PDFs, or `mode="images"`, as page images Claude can see), **images** (JPEG/PNG/GIF/WebP), and text files (.ics, .csv, .json…) | always |
+| `get_attachment` | Open an attachment: **PDFs** as text (scanned PDFs, or `mode="images"`, as page images Claude can see), **images** incl. iPhone **HEIC**, **Word** `.docx` and **PowerPoint** `.pptx` as text (tables and speaker notes included), **Excel** `.xlsx` as CSV per sheet, and text files (.ics, .csv, .json…). Old `.doc/.xls/.ppt` are not supported | always |
 | `create_draft` | Save a draft (new or reply) to Drafts. **Nothing is sent**; you send it from Mail | always |
 | `move_message`, `set_flags` | Move to a folder, archive or trash; mark read/unread or flagged | `organize: true` |
 | `create_folder`, `rename_folder`, `delete_folder` | Manage your own folders. System folders are refused; only **empty** folders can be deleted | `organize: true` |
